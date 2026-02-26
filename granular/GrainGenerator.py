@@ -2,7 +2,8 @@ import numpy as np
 
 class GrainGenerator:
 
-	#def __init__(self, ...):
+	def __init__(self, sample, startPosition, startRandomness, grainSize, sizeRandomness, window):
+		pass
 
 
 	def generateGrain(self):
