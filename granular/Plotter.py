@@ -29,15 +29,20 @@ class Plotter:
 		grainAssembler.grainGenerator = impulseGrainGenerator
 
 		# Generate response
-		response = grainAssembler.generateSignal(duration)
+		response = grainAssembler.generateSignal(duration, numChannels)
 
 		# Plot		
 		plt.figure(figsize=(6,4))
+		plt.suptitle("Granular Synthesiser Impulse Response")
+		timeAxis = np.arange(response.shape[1]) / grainAssembler.sampleRate
 
 		# Plot each channel
 		for channelIdx in range(numChannels):
 			plt.subplot(numChannels,1,channelIdx+1)
-			plt.plot(response[channelIdx,:])
+			plt.plot(timeAxis, response[channelIdx,:])
+			plt.title(f"Channel {channelIdx}")
+			plt.xlabel("Time (seconds)")
+			plt.ylabel("Amplitude")
 
 		plt.tight_layout()
 		plt.show()
