@@ -2,19 +2,33 @@ import numpy as np
 
 class GrainProfile:
 
-	def __init__(self, noise, grains):
-		self.noise = noise
+	def __init__(self, noiseSpectra, grains):
+		self.noiseSpectra = noiseSpectra
 		self.grains = grains
 
 	def getGrain(self, size):
 		grain = self.grains[np.random.randint(0, len(grains) - 1)]
-		endSample = min(size, grain.size)
+		endSample = min(size - 1, grain.size - 1)
 		return grain[:endSample]
+
+	def generateNoise(self, durationSamples):
+		"""
+		Shape white noise to match previously substracted noise using multiplication of the spectra in
+		the frequency domain.
+		"""
+		# TODO
+		output = np.zeros(durationSamples)
+
+		return output
+
 
 
 class GranularSynthesiser:
 
 	def setParameters(self, grainSize, sizeRandomness, density, densityRandomness, gainRandomness, noiseGain):
+		"""
+		Apply randomness factors to parameters.
+		"""
 		self.grainSize = grainSize
 		self.density = density
 		self.noiseGain = noiseGain
@@ -52,8 +66,9 @@ class GranularSynthesiser:
 
 
 	def generateSignal(self, signalSource, numGrains, durationSamples):
-		grainProfile = self._extractGrain(signalSource, numGrains)
 		output = np.zeros(durationSamples)
+
+		grainProfile = self.extractGrain(signalSource, numGrains)
 
 		# Apply noise
 		# TODO
@@ -87,8 +102,8 @@ class GranularSynthesiser:
 		output = np.zeros(durationSamples)
 
 		# Extract grains
-		grainProfileA = self._extractGrain(signalA, numGrainsA)
-		grainProfileB = self._extractGrain(signalB, numGrainsB)
+		grainProfileA = self.extractGrain(signalA, numGrainsA)
+		grainProfileB = self.extractGrain(signalB, numGrainsB)
 
 		# Average noises
 		# TODO
@@ -128,6 +143,15 @@ class GranularSynthesiser:
 		pass
 
 
-	def _extractGrain(self, signal, numGrains):
+	def extractGrain(self, signal, numGrains):
 		# TODO
-		return GrainProfile(None, [np.zeros(10) for _ in range(3)])
+		"""
+		Grain extraction:
+			1. Extract noise using Spectral substraction.
+			2. Grain extraction: Loudest parts of signal found from the smoothed envelope obtained with
+			a moving average of the Hilbert transform of the signal.
+		User specifies the number of grains to be extracted.
+		Attenuate start and end of grains using an envelope (described in the paper)
+		"""
+		grains = [np.zeros(10) for _ in range(3)] # List of grains
+		return GrainProfile(None, grains)
