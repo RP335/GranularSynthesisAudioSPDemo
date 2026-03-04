@@ -1,13 +1,16 @@
 import argparse
 from granular import GrainAssembler, GrainGenerator, Plotter
+import numpy as np
 
 
 def main(density, densityRandomness, numChannels):
 
 	# TODO: I'm just testing now
 	sampleRate = 44100
+
+	sample = 0.1 * np.random.randn(sampleRate * 2)
 	grainGenerator = GrainGenerator(
-		sample=0,
+		sample=sample,
 		startPosition=0,
 		startRandomness=0,
 		grainSize=0,
