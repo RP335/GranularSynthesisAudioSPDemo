@@ -3,6 +3,10 @@ import numpy as np
 class GrainProfile:
 
 	def __init__(self, noiseSpectra, grains):
+		"""
+		
+		grains: List of 1D np.arrays containing grains
+		"""
 		self.noiseSpectra = noiseSpectra
 		self.grains = grains
 
@@ -11,6 +15,7 @@ class GrainProfile:
 		endSample = min(size - 1, grain.size - 1)
 		return grain[:endSample]
 
+	# ********************************** NIKLAS **********************************
 	def generateNoise(self, durationSamples):
 		"""
 		Shape white noise to match previously substracted noise using multiplication of the spectra in
@@ -21,6 +26,23 @@ class GrainProfile:
 
 		return output
 
+	# ********************************** RAHUL **********************************
+	def blend(self, grainProfile):
+		grains = self.grains.append(grainProfile.grains)
+		# Average noises
+		# TODO
+
+		return GrainProfile(noise, grains)
+
+	# ********************************** RAHUL **********************************
+	def morph(self, grainProfile)
+		# Morph grains
+		# TODO
+
+		# Average noises
+		# TODO
+
+		return GrainProfile()
 
 
 class GranularSynthesiser:
@@ -65,13 +87,12 @@ class GranularSynthesiser:
 			self.currentGain = self.gain + drift
 
 
+	# ********************************** SERGIO **********************************
 	def generateSignal(self, signalSource, numGrains, durationSamples):
-		output = np.zeros(durationSamples)
-
 		grainProfile = self.extractGrain(signalSource, numGrains)
 
 		# Apply noise
-		# TODO
+		output = grainProfile.generateNoise(durationSamples)
 
 		# Add grains
 		sampleIdx = 0
@@ -97,7 +118,7 @@ class GranularSynthesiser:
 		return output
 
 
-
+	# ********************************** SERGIO **********************************
 	def blendSounds(self, signalA, signalB, durationSamples, numGrainsA=2, numGrainsB=2, weight=0.5, blockSize=64, overlap=32):
 		output = np.zeros(durationSamples)
 
@@ -109,7 +130,7 @@ class GranularSynthesiser:
 		# TODO
 
 		# Apply noise
-		# TODO
+		#TODO
 
 		# Add grains
 		sampleIdx = 0
@@ -138,11 +159,13 @@ class GranularSynthesiser:
 		return output
 
 
+	# ********************************** SERGIO **********************************
 	def morphSound(self, signalA, signalB, duration, morphFactor):
 		# TODO
 		pass
 
 
+	# ********************************** NIKLAS **********************************
 	def extractGrain(self, signal, numGrains):
 		# TODO
 		"""
