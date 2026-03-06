@@ -1,17 +1,25 @@
 import numpy as np
+import random
 
 class GrainProfile:
 
-	def __init__(self, noiseSpectra, grains):
+	def __init__(self, noiseSpectra, grains, weights=None):
 		"""
 		
 		grains: List of 1D np.arrays containing grains
+		weights: Probability weights of choosing each grain
 		"""
 		self.noiseSpectra = noiseSpectra
 		self.grains = grains
+		if (weights == None):
+			weights = [1.0 for _ in range(grains.size)]
+		self.weights = weights
 
 	def getGrain(self, size):
-		grain = self.grains[np.random.randint(0, len(grains) - 1)]
+		"""
+		Returns random grain.
+		"""
+		grain = random.choice(self.grains, weights=self.weights, k=1)
 		endSample = min(size - 1, grain.size - 1)
 		return grain[:endSample]
 
@@ -27,15 +35,32 @@ class GrainProfile:
 		return output
 
 	# ********************************** RAHUL **********************************
-	def blend(self, grainProfile):
+	def blend(self, grainProfile, weightBias):
+		
+		# Append grains
 		grains = self.grains.append(grainProfile.grains)
+
+		# Calculate weights
+		# Target probability mass for each list of grains
+		target1 = 1 - weightBias
+		target2 = bias
+
+		sum1 = sum(self.weights)
+		sum2 = sum(grainProfile.weights)
+
+		# Scale weights
+		scaled1 = [w * target1 / sum1 for w in self.weights] if sum1 > 0 else []
+		scaled2 = [w * target2 / sum2 for w in grainProfile.weights] if sum2 > 0 else []
+
+		weights = scaled1.append(scaled2)
+
 		# Average noises
 		# TODO
 
-		return GrainProfile(noise, grains)
+		return GrainProfile(noise, grains, weights)
 
 	# ********************************** RAHUL **********************************
-	def morph(self, grainProfile)
+	def morph(self, grainProfile, morphFactor)
 		# Morph grains
 		# TODO
 
@@ -88,8 +113,7 @@ class GranularSynthesiser:
 
 
 	# ********************************** SERGIO **********************************
-	def generateSignal(self, signalSource, numGrains, durationSamples):
-		grainProfile = self.extractGrain(signalSource, numGrains)
+	def generateSignal(self, grainProfile, durationSamples):
 
 		# Apply noise
 		output = grainProfile.generateNoise(durationSamples)
@@ -119,50 +143,40 @@ class GranularSynthesiser:
 
 
 	# ********************************** SERGIO **********************************
-	def blendSounds(self, signalA, signalB, durationSamples, numGrainsA=2, numGrainsB=2, weight=0.5, blockSize=64, overlap=32):
-		output = np.zeros(durationSamples)
+	def extendSignal(self, signalSource, numGrains, durationSamples):
+
+		# Extract grain profile
+		grainProfile = self.extractGrain(signalSource, numGrains)
+
+		# Generate signal
+		return self.generateSignal(grainProfile, durationSamples)
+
+
+	# ********************************** SERGIO **********************************
+	def blendSounds(self, signalA, signalB, durationSamples, numGrainsA=2, numGrainsB=2, weight=0.5):
 
 		# Extract grains
 		grainProfileA = self.extractGrain(signalA, numGrainsA)
 		grainProfileB = self.extractGrain(signalB, numGrainsB)
 
-		# Average noises
-		# TODO
+		# Blend grains
+		blendProfile = grainProfileA.blend(grainProfileB, weight)
 
-		# Apply noise
-		#TODO
-
-		# Add grains
-		sampleIdx = 0
-
-		while(sampleIdx < durationSamples):
-
-			self.updateParameters()
-
-			# Get grain
-			if np.random.random() < weight:
-				grain = grainProfileA.getGrain(self.currentSize)
-			else:
-				grain = grainProfileB.getGrain(self.currentSize)
-
-			# Apply gain
-			grain *= self.currentGain
-
-			# Write grain to output
-			startIdx = sampleIdx
-			endIdx = min(durationSamples-1, startIdx + grain.size) # Check grain fits in output and truncate if needed
-			output[startIdx : endIdx] += grain[0 : endIdx - startIdx]
-
-			# Step sample index
-			sampleIdx += self.currentDensity
-
-		return output
+		# Generate signal from blended profile
+		return self.generateSignal(blendProfile)
 
 
 	# ********************************** SERGIO **********************************
 	def morphSound(self, signalA, signalB, duration, morphFactor):
-		# TODO
-		pass
+		# Extract grains
+		grainProfileA = self.extractGrain(signalA, numGrainsA)
+		grainProfileB = self.extractGrain(signalB, numGrainsB)
+
+		# Morph grains
+		morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
+
+		# Generate signal from morphed profile
+		return self.generateSignal(morphProfile)
 
 
 	# ********************************** NIKLAS **********************************
