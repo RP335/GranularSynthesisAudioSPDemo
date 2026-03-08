@@ -1,1 +1,2 @@
 from .GranularSynthesiser import GranularSynthesiser
+from .GrainProfile import GrainProfile
