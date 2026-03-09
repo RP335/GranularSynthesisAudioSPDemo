@@ -30,13 +30,53 @@ class GrainProfile:
         Shape white noise to match previously substracted noise using multiplication of the spectra in
         the frequency domain.
         """
-        # TODO
+        if self.noiseSpectra is None or len(self.noiseSpectra) == 0:
+            # Only white noise if no spectrum available
+            noise = np.random.normal(0.0, 1.0, durationSamples)
+            noise /= np.max(np.abs(noise)) + 1e-12
+            return noise
 
-        # Generate white noise
-        output = np.random.normal(0, 1, durationSamples) # Generate white noise
-        output = output / np.max(np.abs(output)) # Normalize
+        # FFT size
+        half_len = len(self.noiseSpectra)
+        N_fft = (half_len - 1) * 2
 
-        return output
+        # Choose hop size and window for overlap-add
+        hop = N_fft // 2    # 50 % overlap
+        win = np.hanning(N_fft)
+
+        # How many frames needed
+        n_frames = 1 + int(np.ceil(max(0, durationSamples - N_fft) / hop))
+        total_len = (n_frames - 1) * hop + N_fft
+
+        out = np.zeros(total_len)
+
+        for i in range(n_frames):
+            # Random phases for the bins in the one-sided spectrum
+            phases = np.random.uniform(0, 2 * np.pi, half_len)
+
+            # One-sided complex spectrum
+            X_half = self.noiseSpectra * np.exp(1j * phases)
+
+            # Mirror to build full complex spectrum 
+            X_conj = np.conj(X_half[1:-1][::-1])
+            X_full = np.concatenate((X_half, X_conj))
+
+            # IFFT
+            frame = np.fft.ifft(X_full).real
+
+            # Window and overlap-add
+            start = i * hop
+            out[start:start + N_fft] += frame * win
+
+        # Trim to duration
+        out = out[:durationSamples]
+
+        # Normalize to [-1, 1] to avoid clipping
+        max_abs = np.max(np.abs(out)) + 1e-12
+        out /= max_abs
+
+        return out
+
 
     # ********************************** RAHUL **********************************
     def blend(self, grainProfile, weightBias):
