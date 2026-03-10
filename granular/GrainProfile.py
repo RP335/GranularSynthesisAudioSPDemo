@@ -20,9 +20,13 @@ class GrainProfile:
         """
         Returns random grain.
         """
-        grain = random.choices(self.grains, weights=self.weights, k=1)[0]
-        endSample = min(size, grain.size)  # no -1
-        return grain[:endSample]
+         # Get random index based on weights
+        indices = list(range(len(self.grains)))
+        selected_idx = random.choices(indices, weights=self.weights, k=1)[0]
+        grain = self.grains[selected_idx]
+        
+        endSample = min(size, grain.size)
+        return grain[:endSample], selected_idx
 
     # ********************************** NIKLAS **********************************
     def generateNoise(self, durationSamples):

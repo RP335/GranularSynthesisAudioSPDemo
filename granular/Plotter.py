@@ -1,5 +1,6 @@
 import numpy as np
 from scipy import signal
+
 import matplotlib.pyplot as plt
 
 class Plotter:
@@ -7,7 +8,7 @@ class Plotter:
     def plotExtraction(signalSource, numGrains, durationSamples, synth, title):
 
         # Extract grain profile
-        grainProfile, denoisedSignal, g, startTimes = synth.extractGrain(signalSource, numGrains, debug=True)
+        grainProfile, denoisedSignal, smoothedEnvelope, startTimes = synth.extractGrain(signalSource, numGrains, debug=True)
 
         plt.figure(figsize=(12, 6))
         plt.suptitle(title)
@@ -47,6 +48,8 @@ class Plotter:
         grainPlot = np.zeros_like(signalSource)
         plt.subplot(2,2,4)
         plt.plot(time, signalSource, color="0.3", label="Original Signal")
+        plt.plot(time, smoothedEnvelope, alpha = 0.5, linestyle='--', label="Smoothed Envelope")
+        plt.ylim([-1.0, 1.0])
         plt.legend()
         for grainIdx in range(len(grainProfile.grains)):
             grain = grainProfile.grains[grainIdx]
@@ -70,8 +73,8 @@ class Plotter:
 
 
     def plotBlend(signalA, signalB, durationSamples, numGrainsA, numGrainsB, synth):
-        #Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
-        #Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
+        Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
+        Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
 
         grainProfileA, denoisedSignalA, gA, startTimesA = synth.extractGrain(signalA, numGrainsA, debug=True)
         grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
@@ -104,3 +107,71 @@ class Plotter:
     def plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, synth):
         Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
         Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
+
+        grainProfileA, denoisedSignalA, gA, startTimesA = synth.extractGrain(signalA, numGrainsA, debug=True)
+        grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
+
+        verticalShift = 0.0
+        totalShift = 10.0
+        numPlots = 6
+        morphFactors = np.linspace(0.0, 1.0, numPlots)
+
+        # Plot morphed noise
+        plt.figure(figsize=(10, 6))
+
+        for morphFactor in morphFactors:
+            morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
+            frequencies = np.linspace(0, synth.sampleRate/2, len(morphProfile.noiseSpectra))
+            plt.loglog(frequencies, morphProfile.noiseSpectra + verticalShift, label=f"Morph Factor = {morphFactor:.2f}")
+            verticalShift += totalShift / numPlots
+
+        plt.xlim([20.0, synth.sampleRate/2])
+        plt.ylim([0.1, 15.0])
+        plt.grid(True, which="both", ls="-", alpha=0.2)
+        plt.title("Morphed Noise Magnitude Spectra (Vertically Shifted)")
+        plt.xlabel('Frequency (Hz)')
+        plt.ylabel('Magnitude')
+        
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
+
+
+        # Plot morphed grains
+        plt.figure(figsize=(10, 6))
+        plt.suptitle("Morphed Grains Magnitude Spectra (Vertically Shifted)")
+        morphProfile = grainProfileA.morph(grainProfileB, 0.5)
+        numGrains = len(morphProfile.grains)
+        verticalShift = 0.0
+
+        for morphFactor in morphFactors:
+            morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
+
+            for idx in range(numGrains):
+                plt.subplot(1, numGrains, idx + 1)
+                plt.title(f"Grain Pair {idx} Morphing")
+                plt.xlabel('Frequency (Hz)')
+                plt.ylabel('Magnitude')
+                plt.xlim([20.0, synth.sampleRate/2])
+                plt.ylim([0.1, 15.0])
+
+                # Frequency Spectrum
+                fft_result = np.fft.fft(morphProfile.grains[idx])
+                freq = np.fft.fftfreq(len(morphProfile.grains[idx]), d=1.0 / synth.sampleRate)
+                magnitude = np.abs(fft_result)[:len(fft_result)//2]
+                freq_plot = freq[:len(freq)//2]
+                
+                # Apply smoothing (choose one method)
+                # Method 2 (Savitzky-Golay) often works best for spectra
+                if len(magnitude) > 64:  # Ensure enough points for smoothing
+                    mag_smooth = signal.savgol_filter(magnitude, window_length=64, polyorder=3)
+                else:
+                    mag_smooth = magnitude
+                    
+                plt.plot(freq_plot, mag_smooth + verticalShift, label=f"Morph Factor = {morphFactor:.2f}") 
+                
+            verticalShift += totalShift / numPlots
+
+        plt.legend(bbox_to_anchor=(0, -0.15), loc='upper left', frameon=True)
+        plt.tight_layout()
+        plt.show()    

@@ -74,14 +74,14 @@ class GranularSynthesiser:
             plt.legend()
 
             # Allocate memory for plotting grains
-            plotData = np.zeros_like(output)
+            plotDatas = [np.zeros_like(output) for _ in range(len(grainProfile.grains))]
 
         while(sampleIdx < durationSamples):
 
             self.updateParameters()
 
             # Get grain
-            grain = grainProfile.getGrain(self.currentGrainSize)
+            grain, grainIdx = grainProfile.getGrain(self.currentGrainSize)
 
             # Apply gain
             grain *= self.currentGrainGain
@@ -97,17 +97,19 @@ class GranularSynthesiser:
             sampleIdx += self.currentDensity
 
             if plot:
-                # Plot grain
-                plotData[startIdx : endIdx] += grain[0 : endIdx - startIdx]
-                plt.plot(time, plotData)
-                plotData[:] = 0.0
+                # Update plot
+                plotDatas[grainIdx][startIdx : endIdx] += grain[0 : endIdx - startIdx]
                 
 
         if plot:
+            for grainIdx, plotData in enumerate(plotDatas):
+                plt.plot(time, plotData, alpha=0.8, label=f"Grain {grainIdx}")
+
             # Plot generated signal
             plt.title("Generated Extended Signal")
             plt.xlabel('Time (sec)')
             plt.ylabel("Amplitude")
+            plt.legend()
             plt.tight_layout()
             plt.show()
 
@@ -165,7 +167,7 @@ class GranularSynthesiser:
         morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
 
         if plot:
-            Plotter.plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
+            Plotter.plotMorph(signalA, signalB, duration, numGrainsA, numGrainsB, self)
 
 		# Generate signal from morphed profile
         output = self.generateSignal(morphProfile, duration, plot)
