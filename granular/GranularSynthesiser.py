@@ -67,6 +67,7 @@ class GranularSynthesiser:
         sampleIdx = 0
 
         if plot:
+            plt.figure(figsize=(10,4))
             # Plot noise
             time = np.linspace(0, durationSamples / self.sampleRate, durationSamples)
             plt.plot(time, output, color="0.5", alpha=0.7, label="Noise")
@@ -100,7 +101,15 @@ class GranularSynthesiser:
                 plotData[startIdx : endIdx] += grain[0 : endIdx - startIdx]
                 plt.plot(time, plotData)
                 plotData[:] = 0.0
+                
 
+        if plot:
+            # Plot generated signal
+            plt.title("Generated Extended Signal")
+            plt.xlabel('Time (sec)')
+            plt.ylabel("Amplitude")
+            plt.tight_layout()
+            plt.show()
 
         return output
 
@@ -110,19 +119,6 @@ class GranularSynthesiser:
 
         if plot:
             Plotter.plotExtend(signalSource, numGrains, durationSamples, self)
-
-            # Plot signals
-            time = np.linspace(0, durationSamples / self.sampleRate, len(signalSource))
-            plt.subplot(2, 1, 1)
-            plt.title("Original Signal")
-            plt.xlabel('Time (sec)')
-            plt.ylabel("Amplitude")
-            plt.plot(time, signalSource)
-            plt.subplot(2, 1, 2)
-            plt.title("Generated Extended Signal")
-            plt.xlabel('Time (sec)')
-            plt.ylabel("Amplitude")
-
 
         # Extract grain profile
         grainProfile = self.extractGrain(signalSource, numGrains)
@@ -150,23 +146,6 @@ class GranularSynthesiser:
         if plot:
             Plotter.plotBlend(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
 
-            plt.figure(figsize=(10, 6))
-            plt.suptitle("Granular Synthesis Sound Blending")
-            plt.subplot(3, 1, 1)
-            plt.title("Source A")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
-            plt.plot(signalA)
-            plt.subplot(3, 1, 2)
-            plt.title("Source B")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
-            plt.plot(signalB)
-            plt.subplot(3, 1, 3)
-            plt.title("Blended Sound")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
-
         # Generate signal from blended profile
         output = self.generateSignal(blendProfile, durationSamples, plot)
 
@@ -187,23 +166,6 @@ class GranularSynthesiser:
 
         if plot:
             Plotter.plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
-
-            plt.figure(figsize=(10, 6))
-            plt.suptitle("Granular Synthesis Sound Morphing")
-            plt.subplot(3, 1, 1)
-            plt.title("Source A")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
-            plt.plot(signalA)
-            plt.subplot(3, 1, 2)
-            plt.title("Source B")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
-            plt.plot(signalB)
-            plt.subplot(3, 1, 3)
-            plt.title("Morphed Sound")
-            plt.xlabel("Time (samples)")
-            plt.ylabel("Amplitude")
 
 		# Generate signal from morphed profile
         output = self.generateSignal(morphProfile, duration, plot)
@@ -324,6 +286,9 @@ class GranularSynthesiser:
         grains = []
         env = g.copy()
 
+        if debug:
+            startTimes = []
+
         # Window extents around the envelope peak tau
         # w_s and w_e assumed to be 2048 samples
         w_s = 2048
@@ -386,6 +351,9 @@ class GranularSynthesiser:
             sc[ts:te + 1] = 0.0
             env[ts:te + 1] = 0.0
 
+            if debug:
+                startTimes.append(ts)
+
         # If something goes wrong and no grains were found, use the whole signal as a single grain
         if not grains:
             grains = [sc]
@@ -395,6 +363,6 @@ class GranularSynthesiser:
 
         if debug:
             # Palauta myös denoised signal sc ja smoothed envelope g
-            return GrainProfile(noiseSpectra, grains, weights), sc, g
+            return GrainProfile(noiseSpectra, grains, weights), sc, g, startTimes
         else:
             return GrainProfile(noiseSpectra, grains, weights)
