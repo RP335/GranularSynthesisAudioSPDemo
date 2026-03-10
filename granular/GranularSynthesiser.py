@@ -1,13 +1,18 @@
 import numpy as np
 import random
 from scipy.interpolate import interp1d
-import matplotlib.pyplot as plt
 from scipy.signal import hilbert
+from scipy import signal
+import matplotlib.pyplot as plt
 
 from .GrainProfile import GrainProfile
+from.Plotter import Plotter
 
 
 class GranularSynthesiser:
+
+    def __init__(self, sampleRate):
+        self.sampleRate = sampleRate
 
     def setParameters(self, grainSize, sizeRandomness, density, densityRandomness, grainGainRandomness, noiseGain):
         self.grainSize = grainSize
@@ -55,12 +60,16 @@ class GranularSynthesiser:
         # Apply noise
         output = grainProfile.generateNoise(durationSamples)
 
+        # Apply noise gain
+        output *= self.noiseGain
+
         # Add grains
         sampleIdx = 0
 
         if plot:
             # Plot noise
-            plt.plot(output, color="0.5", alpha=0.7, label="Noise")
+            time = np.linspace(0, durationSamples / self.sampleRate, durationSamples)
+            plt.plot(time, output, color="0.5", alpha=0.7, label="Noise")
             plt.legend()
 
             # Allocate memory for plotting grains
@@ -89,7 +98,7 @@ class GranularSynthesiser:
             if plot:
                 # Plot grain
                 plotData[startIdx : endIdx] += grain[0 : endIdx - startIdx]
-                plt.plot(plotData)
+                plt.plot(time, plotData)
                 plotData[:] = 0.0
 
 
@@ -99,14 +108,24 @@ class GranularSynthesiser:
     # ********************************** SERGIO **********************************
     def extendSound(self, signalSource, durationSamples, numGrains, plot=False):
 
+        if plot:
+            Plotter.plotExtend(signalSource, numGrains, durationSamples, self)
+
+            # Plot signals
+            time = np.linspace(0, durationSamples / self.sampleRate, len(signalSource))
+            plt.subplot(2, 1, 1)
+            plt.title("Original Signal")
+            plt.xlabel('Time (sec)')
+            plt.ylabel("Amplitude")
+            plt.plot(time, signalSource)
+            plt.subplot(2, 1, 2)
+            plt.title("Generated Extended Signal")
+            plt.xlabel('Time (sec)')
+            plt.ylabel("Amplitude")
+
+
         # Extract grain profile
         grainProfile = self.extractGrain(signalSource, numGrains)
-
-        if plot:
-            plt.figure(figsize=(10, 6))
-            plt.subplot(2, 1, 1)
-            plt.plot(signalSource)
-            plt.subplot(2, 1, 2)
 
         # Generate signal
         output = self.generateSignal(grainProfile, durationSamples, plot)
@@ -129,6 +148,8 @@ class GranularSynthesiser:
         blendProfile = grainProfileA.blend(grainProfileB, blendFactor)
         	
         if plot:
+            Plotter.plotBlend(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
+
             plt.figure(figsize=(10, 6))
             plt.suptitle("Granular Synthesis Sound Blending")
             plt.subplot(3, 1, 1)
@@ -165,6 +186,8 @@ class GranularSynthesiser:
         morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
 
         if plot:
+            Plotter.plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
+
             plt.figure(figsize=(10, 6))
             plt.suptitle("Granular Synthesis Sound Morphing")
             plt.subplot(3, 1, 1)

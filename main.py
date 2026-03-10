@@ -27,7 +27,7 @@ def main(operation, files, duration, grainSize, sizeRandomness, density, density
     density = int(sample_rate // density)
 
     #Setup the Synthesizer
-    synth = GranularSynthesiser()
+    synth = GranularSynthesiser(sample_rate)
     synth.setParameters(grainSize, sizeRandomness, density, 
                         densityRandomness, grainGainRandomness, noiseGain)
 

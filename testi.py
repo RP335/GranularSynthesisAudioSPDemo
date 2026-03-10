@@ -18,7 +18,7 @@ def test_extend_sound():
     x /= np.max(np.abs(x)) + 1e-12
 
     # Create synthesiser and set parameters
-    synth = GranularSynthesiser()
+    synth = GranularSynthesiser(fs)
     synth.setParameters(
         grainSize=2048,
         sizeRandomness=0,
@@ -46,7 +46,7 @@ def test_extract_grains():
         x = x[:, 0]
     x /= np.max(np.abs(x)) + 1e-12
 
-    synth = GranularSynthesiser()
+    synth = GranularSynthesiser(fs)
     gp = synth.extractGrain(x, numGrains=5)
 
     print(f"Extracted {len(gp.grains)} grains")
@@ -76,7 +76,7 @@ def test_noise_subtraction():
         x = x[:, 0]
     x /= np.max(np.abs(x)) + 1e-12
 
-    synth = GranularSynthesiser()
+    synth = GranularSynthesiser(fs)
     gp, sc, g = synth.extractGrain(x, numGrains=1, debug=True)
     
     plt.figure(figsize=(10,8))
