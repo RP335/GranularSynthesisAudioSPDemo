@@ -27,7 +27,7 @@ class Plotter:
         plt.subplot(2, 2, 3)
         f, t, Sxx = signal.spectrogram(denoisedSignal, fs=synth.sampleRate)
         plt.pcolormesh(t, f, 10 * np.log10(Sxx), shading='gouraud')
-        plt.title("Denoised Signal Spectrogram")
+        plt.title("Signal Spectrogram After Noise and Grains Extraction")
         plt.ylabel('Frequency (Hz)')
         plt.xlabel('Time (sec)')
         plt.colorbar(label='Power (dB)')

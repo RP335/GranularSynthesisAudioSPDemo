@@ -91,7 +91,6 @@ class GranularSynthesiser:
             startIdx = sampleIdx
             endIdx = min(durationSamples-1, startIdx + grain.size) # Check grain fits in output and truncate if needed
 
-            #print(f"DEBUG: startIdx: {startIdx}, endIdx: {endIdx}, grain.size: {grain.size} ")
             output[startIdx : endIdx] += grain[0 : endIdx - startIdx]
 
             # Step sample index
@@ -231,7 +230,7 @@ class GranularSynthesiser:
         # Convolve every magnitude spectrum with the Gaussian FIR in frequency
         mags_smooth = np.array([np.convolve(m, h, mode="same") for m in mags])
 
-        
+
         # NOISE SPECTRUM ESTIMATION
         energies = np.sum(mags_smooth**2, axis=1)
         k = max(1, int(0.15 * n_frames))    # 15% of frames, at least 1
@@ -262,6 +261,11 @@ class GranularSynthesiser:
         # Mirror to get full spectrum, then IFFT and overlap-add
         sc_padded = np.zeros_like(padded, dtype=float)
 
+        # Calculate overlap-add normalization factor
+        window_power = np.sum(win**2)  # For power conservation
+        overlap_factor = hop / N_fft    # Overlap factor
+        norm_factor = 1.0 / (window_power * overlap_factor)  # Normalization for reconstruction
+
         for m in range(n_frames):
             X_half = Sc_half[m]
             # Build full spectrum:
@@ -270,11 +274,13 @@ class GranularSynthesiser:
 
             frame_time = np.fft.ifft(X_full).real   # inverse FFT
             start = m * hop
-            sc_padded[start:start + N_fft] += frame_time * win  # overlap-add
+            sc_padded[start:start + N_fft] += frame_time  # DON'T apply window again
+
+        # Normalize the reconstructed signal
+        sc_padded = sc_padded * norm_factor
 
         # Trim back to original signal length
         sc = sc_padded[:len(signal)]
-
 
         # HILBERT ENVELOPE AND SMOOTHING
         analytic = hilbert(sc)
@@ -295,8 +301,10 @@ class GranularSynthesiser:
 
         # Window extents around the envelope peak tau
         # w_s and w_e set the length
-        w_s = int(0.1*self.sampleRate)
-        w_e = int(0.1*self.sampleRate)
+        peak_relative_place = 0.2
+        max_grain_size = self.grainSize + (self.sizeRandomness // 2)
+        w_s = int(peak_relative_place * max_grain_size)
+        w_e = int((1.0 - peak_relative_place) * max_grain_size)
 
         for _ in range(numGrains):
             # Stop if there's no non-zeros
@@ -366,9 +374,9 @@ class GranularSynthesiser:
 
         # Normalize all grains to peak 1.0
         norm_grains = []
-        for g in grains:
-            max_abs = np.max(np.abs(g)) + 1e-12
-            norm_grains.append(g / max_abs)
+        for grain in grains:
+            max_abs = np.max(np.abs(grain)) + 1e-12
+            norm_grains.append(grain / max_abs)
         grains = norm_grains
         
         # Equal probability for each grain when synthesizing later

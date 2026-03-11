@@ -71,7 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("-d", "--dens", type=float, default=2.0, help="Grain Density (Hz)")
     parser.add_argument("-dr", "--densran", type=float, default=0.2, help="Grain Density Random Shift (Hz)")
     parser.add_argument("-gr", "--gainran", type=float, default=0.125, help="Grain Gain Random Shift")
-    parser.add_argument("-ng", "--noisegain", type=float, default=0.125, help="Noise Gain")
+    parser.add_argument("-ng", "--noisegain", type=float, default=0.5, help="Noise Gain")
     parser.add_argument("-n", "--grains", type=int, default=[3, 3], nargs='+', help="Number of Grains For Each Source (e.g. main -n 5 3)")
     parser.add_argument("-fc", "--factor", type=float, default=0.5, help="Blend / Morph Factor In Range [0.0, 1.0]")
 
