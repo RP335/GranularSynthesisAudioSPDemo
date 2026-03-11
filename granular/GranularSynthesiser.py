@@ -117,7 +117,7 @@ class GranularSynthesiser:
 
 
     # ********************************** SERGIO **********************************
-    def extendSound(self, signalSource, durationSamples, numGrains, plot=False):
+    def extendSound(self, signalSource, durationSamples, numGrains, plot=False, channels=2):
 
         if plot:
             Plotter.plotExtend(signalSource, numGrains, durationSamples, self)
@@ -126,17 +126,24 @@ class GranularSynthesiser:
         grainProfile = self.extractGrain(signalSource, numGrains)
 
         # Generate signal
-        output = self.generateSignal(grainProfile, durationSamples, plot)
+        output = []
+
+        # Frst channel (Only plotted)
+        output.append(self.generateSignal(grainProfile, durationSamples, plot))
+
+        # Rest of channels
+        for channelIdx in range(channels - 1):
+            output.append(self.generateSignal(grainProfile, durationSamples, plot=False))
 
         if plot:
             plt.tight_layout()
             plt.show()
 
-        return  output
+        return np.asarray(output).T
 
 
     # ********************************** SERGIO **********************************
-    def blendSounds(self, signalA, signalB, durationSamples, numGrainsA=2, numGrainsB=2, blendFactor=0.5, plot=False):
+    def blendSounds(self, signalA, signalB, durationSamples, numGrainsA=2, numGrainsB=2, blendFactor=0.5, plot=False, channels=2):
 
         # Extract grains
         grainProfileA = self.extractGrain(signalA, numGrainsA)
@@ -149,16 +156,23 @@ class GranularSynthesiser:
             Plotter.plotBlend(signalA, signalB, durationSamples, numGrainsA, numGrainsB, self)
 
         # Generate signal from blended profile
-        output = self.generateSignal(blendProfile, durationSamples, plot)
+        output = []
+
+        # Frst channel (Only plotted)
+        output.append(self.generateSignal(blendProfile, durationSamples, plot))
+
+        # Rest of channels
+        for channelIdx in range(channels - 1):
+            output.append(self.generateSignal(blendProfile, durationSamples, plot=False))
 
         if plot:
             plt.tight_layout()
             plt.show()
 
-        return output
+        return np.asarray(output).T
 
     # ********************************** SERGIO **********************************
-    def morphSounds(self, signalA, signalB, duration, numGrainsA, numGrainsB, morphFactor, plot=False):
+    def morphSounds(self, signalA, signalB, duration, numGrainsA, numGrainsB, morphFactor, plot=False, channels=2):
         # Extract grains
         grainProfileA = self.extractGrain(signalA, numGrainsA)
         grainProfileB = self.extractGrain(signalB, numGrainsB)
@@ -170,13 +184,20 @@ class GranularSynthesiser:
             Plotter.plotMorph(signalA, signalB, duration, numGrainsA, numGrainsB, self)
 
 		# Generate signal from morphed profile
-        output = self.generateSignal(morphProfile, duration, plot)
+        output = []
+
+        # Frst channel (Only plotted)
+        output.append(self.generateSignal(morphProfile, duration, plot))
+
+        # Rest of channels
+        for channelIdx in range(channels - 1):
+            output.append(self.generateSignal(morphProfile, duration, plot=False))
 
         if plot:
             plt.tight_layout()
             plt.show()
 
-        return output
+        return np.asarray(output).T
 
 
     # ********************************** NIKLAS **********************************
