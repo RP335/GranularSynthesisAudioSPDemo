@@ -7,7 +7,7 @@ from granular.GranularSynthesiser import GranularSynthesiser
 
 def test_extend_sound():
     # Read input sound
-    fs, x = wavfile.read("soundA.wav")
+    fs, x = wavfile.read("soundB.wav")
     x = x.astype(np.float32)
 
     # If stereo, take one channel
@@ -19,25 +19,24 @@ def test_extend_sound():
 
     # Create synthesiser and set parameters
     synth = GranularSynthesiser(fs)
+
     synth.setParameters(
         grainSize=2048,
-        sizeRandomness=0,
-        density=1024,
-        densityRandomness=0,
+        sizeRandomness=20,
+        density=int(fs/10),
+        densityRandomness=20,
         grainGainRandomness=0.2,
-        noiseGain=0.5
+        noiseGain=0.7
     )
 
     # Generate sound
     duration = fs * 3
     numGrains = 10
-    y = synth.extendSound(x, durationSamples=duration, numGrains=numGrains, plot=True)
+    y = synth.extendSound(x, durationSamples=duration, numGrains=numGrains, plot=False)
 
     # Save result to listen
     y = y / (np.max(np.abs(y)) + 1e-12) * 0.9
-    wavfile.write("synthesized_soundA.wav", fs, y.astype(np.float32))
-
-    plt.show()
+    wavfile.write("synthesized_soundB3.wav", fs, y.astype(np.float32))
 
 def test_extract_grains():
     fs, x = wavfile.read("soundA.wav")
@@ -77,7 +76,7 @@ def test_noise_subtraction():
     x /= np.max(np.abs(x)) + 1e-12
 
     synth = GranularSynthesiser(fs)
-    gp, sc, g = synth.extractGrain(x, numGrains=1, debug=True)
+    _, sc, g, _ = synth.extractGrain(x, numGrains=1, debug=True)
     
     plt.figure(figsize=(10,8))
 
@@ -98,6 +97,6 @@ def test_noise_subtraction():
 
 
 if __name__ == "__main__":
-    #test_extend_sound()
+    test_extend_sound()
     #test_extract_grains()
-    test_noise_subtraction()
+    #test_noise_subtraction()

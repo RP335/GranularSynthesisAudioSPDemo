@@ -4,7 +4,7 @@ from scipy.interpolate import interp1d
 
 class GrainProfile:
 
-    def __init__(self, noiseSpectra, grains, weights=None):
+    def __init__(self, noiseSpectra, grains, weights=None, originalAmps=None):
         """
         
         grains: List of 1D np.arrays containing grains
@@ -15,6 +15,9 @@ class GrainProfile:
         if (weights == None):
             weights = [1.0 for _ in range(len(self.grains))]
         self.weights = weights
+        if originalAmps is None:
+            originalAmps = [1.0 for _ in range(len(self.grains))]
+        self.originalAmps = originalAmps
 
     def getGrain(self, size):
         """
@@ -104,7 +107,7 @@ class GrainProfile:
         scaled1 = [w * target1 / sum1 for w in self.weights] if sum1 > 0 else []
         scaled2 = [w * target2 / sum2 for w in grainProfile.weights] if sum2 > 0 else []
 
-        weights = scaled1.append(scaled2)
+        weights = scaled1 + scaled2
 
         blended_noise = (1.0 - weightBias) * self.noiseSpectra + weightBias * grainProfile.noiseSpectra
 

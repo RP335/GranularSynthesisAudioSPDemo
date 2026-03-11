@@ -44,13 +44,22 @@ class Plotter:
 
 
         # Plot grains
-        time = np.linspace(0, durationSamples / synth.sampleRate, len(signalSource))
+        time = np.linspace(0, len(signalSource) / synth.sampleRate, len(signalSource))
+        time_env = np.linspace(0, len(signalSource) / synth.sampleRate, len(smoothedEnvelope))
+
         grainPlot = np.zeros_like(signalSource)
         plt.subplot(2,2,4)
+
+        # Original signal
         plt.plot(time, signalSource, color="0.3", label="Original Signal")
-        plt.plot(time, smoothedEnvelope, alpha = 0.5, linestyle='--', label="Smoothed Envelope")
+
+        # Smoothed envelope (has its own time)
+        plt.plot(time_env, smoothedEnvelope, alpha=0.5, linestyle='--', label="Smoothed Envelope")
+
         plt.ylim([-1.0, 1.0])
         plt.legend()
+
+        # grains for same time axis as original
         for grainIdx in range(len(grainProfile.grains)):
             grain = grainProfile.grains[grainIdx]
             startSample = startTimes[grainIdx]
@@ -58,6 +67,7 @@ class Plotter:
             grainPlot[startSample:endSample] = grain[:endSample - startSample]
             plt.plot(time, grainPlot, alpha=0.7)
             grainPlot[:] = 0.0
+
         plt.title("Original Signal With Extracted Grains")
         plt.xlabel("Time (sec)")
         plt.ylabel("Amplitude")

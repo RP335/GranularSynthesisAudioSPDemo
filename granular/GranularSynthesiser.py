@@ -84,7 +84,8 @@ class GranularSynthesiser:
             grain, grainIdx = grainProfile.getGrain(self.currentGrainSize)
 
             # Apply gain
-            grain *= self.currentGrainGain
+            amp = random.choice(grainProfile.originalAmps)
+            grain = grain * amp 
 
             # Write grain to output
             startIdx = sampleIdx
@@ -286,15 +287,16 @@ class GranularSynthesiser:
 
         # GRAIN EXTRACTION FROM LOUDEST PARTS
         grains = []
+        originalAmps = []
         env = g.copy()
 
         if debug:
             startTimes = []
 
         # Window extents around the envelope peak tau
-        # w_s and w_e assumed to be 2048 samples
-        w_s = 2048
-        w_e = 2048
+        # w_s and w_e set the length
+        w_s = int(0.1*self.sampleRate)
+        w_e = int(0.1*self.sampleRate)
 
         for _ in range(numGrains):
             # Stop if there's no non-zeros
@@ -327,6 +329,7 @@ class GranularSynthesiser:
             # Extract grain from signal
             grain = sc[ts:te + 1].copy()
             length = len(grain)
+            originalAmps.append(np.max(np.abs(grain)) + 1e-12)
 
 
             # APPLY ENVELOPE
@@ -359,12 +362,22 @@ class GranularSynthesiser:
         # If something goes wrong and no grains were found, use the whole signal as a single grain
         if not grains:
             grains = [sc]
+            originalAmps = [np.max(np.abs(sc)) + 1e-12]
 
+        # Normalize all grains to peak 1.0
+        norm_grains = []
+        for g in grains:
+            max_abs = np.max(np.abs(g)) + 1e-12
+            norm_grains.append(g / max_abs)
+        grains = norm_grains
+        
         # Equal probability for each grain when synthesizing later
         weights = [1.0 / len(grains)] * len(grains)
 
+
+        gp = GrainProfile(noiseSpectra, grains, weights, originalAmps)
+
         if debug:
-            # Palauta myös denoised signal sc ja smoothed envelope g
-            return GrainProfile(noiseSpectra, grains, weights), sc, g, startTimes
+            return gp, sc, g, startTimes
         else:
-            return GrainProfile(noiseSpectra, grains, weights)
+            return gp
