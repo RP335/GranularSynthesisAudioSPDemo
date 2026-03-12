@@ -53,13 +53,9 @@ class Plotter:
         plt.subplot(2,2,4)
 
         # Original signal
-        plt.plot(time, signalSource, color="0.3", label="Original Signal")
-
-        # Smoothed envelope (has its own time)
-        plt.plot(time_env, smoothedEnvelope, alpha=0.8, label="Smoothed Envelope")
+        plt.plot(time, signalSource, color="0.7", label="Original Signal")
 
         plt.ylim([-1.0, 1.0])
-        plt.legend()
 
         # grains for same time axis as original
         for grainIdx in range(len(grainProfile.grains)):
@@ -67,9 +63,13 @@ class Plotter:
             startSample = startTimes[grainIdx]
             endSample = min(len(signalSource), startSample + len(grain) - 1)
             grainPlot[startSample:endSample] = grain[:endSample - startSample]
-            plt.plot(time, grainPlot, alpha=0.7)
+            plt.plot(time, grainPlot)
             grainPlot[:] = 0.0
 
+        # Smoothed envelope (has its own time)
+        plt.plot(time_env, smoothedEnvelope, alpha=0.8, color='darkblue', label="Smoothed Envelope")
+
+        plt.legend()
         plt.title("Original Signal With Extracted Grains")
         plt.xlabel("Time (sec)")
         plt.ylabel("Amplitude")

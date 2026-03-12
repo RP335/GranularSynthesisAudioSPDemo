@@ -84,8 +84,9 @@ class GranularSynthesiser:
             grain, grainIdx = grainProfile.getGrain(self.currentGrainSize)
 
             # Apply gain
-            amp = random.choice(grainProfile.originalAmps)
-            grain = grain * amp 
+            #amp = random.choice(grainProfile.originalAmps)
+            #grain = grain * amp 
+            grain = grain * self.currentGrainGain 
 
             # Write grain to output
             startIdx = sampleIdx
