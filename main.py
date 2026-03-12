@@ -51,10 +51,10 @@ def main(operation, files, duration, grainSize, sizeRandomness, density, density
 
 
     # Save the output
-    print(f"Saving to {operation}ed_sound.wav")
+    print(f"Saving to {operation}ed_{files[0]}.wav")
     # Convert back to standard 16-bit audio format
     output_int = np.int16(output / np.max(np.abs(output)) * 32767)
-    wavfile.write(f"{operation}ed_sound.wav", sample_rate, output_int)
+    wavfile.write(f"{operation}ed_{files[0]}.wav", sample_rate, output_int)
     
     print(f"Done {operation}ing and saving audio")
 
