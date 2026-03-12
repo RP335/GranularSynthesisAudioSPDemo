@@ -307,8 +307,9 @@ class GranularSynthesiser:
         analytic = hilbert(sc)
         g_prime = np.abs(analytic)
 
-        # Smoothed envelope g[t] with moving average of length 100
-        win_env = np.ones(100) / 100.0
+        # Smoothed envelope g[t] with moving average of length 10ms
+        #win_env = np.ones(100) / 100.0
+        win_env = np.ones(int(0.01 * self.sampleRate)) / (0.01 * self.sampleRate)
         g = np.convolve(g_prime, win_env, mode="same")
 
 

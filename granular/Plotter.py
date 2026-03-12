@@ -10,6 +10,9 @@ class Plotter:
         # Extract grain profile
         grainProfile, denoisedSignal, smoothedEnvelope, startTimes = synth.extractGrain(signalSource, numGrains, debug=True)
 
+        # Better envelope visualization
+        smoothedEnvelope = (smoothedEnvelope - min(smoothedEnvelope)) / (max(smoothedEnvelope) - min(smoothedEnvelope))
+
         plt.figure(figsize=(12, 6))
         plt.suptitle(title)
 
@@ -33,15 +36,14 @@ class Plotter:
         plt.colorbar(label='Power (dB)')
 
         # Extracted Noise Frequency Magnitude Spectrum
+        N_fft = 1024
         plt.subplot(2, 2, 2)
-        frequencies = np.linspace(0, synth.sampleRate/2, len(grainProfile.noiseSpectra))
-        plt.loglog(frequencies, grainProfile.noiseSpectra)
-        plt.xlim([20.0, synth.sampleRate/2])
-        plt.grid(True, which="both", ls="-", alpha=0.2)
+        freqs = np.fft.rfftfreq(N_fft, d=1/synth.sampleRate)
+        plt.plot(freqs, grainProfile.noiseSpectra)
+        plt.xlabel("Frequency (Hz)")
+        plt.ylabel("Magnitude")
         plt.title("Extracted Noise Magnitude Spectrum")
-        plt.xlabel('Frequency (Hz)')
-        plt.ylabel('Magnitude')
-
+        plt.grid(True)
 
         # Plot grains
         time = np.linspace(0, len(signalSource) / synth.sampleRate, len(signalSource))
@@ -54,7 +56,7 @@ class Plotter:
         plt.plot(time, signalSource, color="0.3", label="Original Signal")
 
         # Smoothed envelope (has its own time)
-        plt.plot(time_env, smoothedEnvelope, alpha=0.5, linestyle='--', label="Smoothed Envelope")
+        plt.plot(time_env, smoothedEnvelope, alpha=0.8, label="Smoothed Envelope")
 
         plt.ylim([-1.0, 1.0])
         plt.legend()
