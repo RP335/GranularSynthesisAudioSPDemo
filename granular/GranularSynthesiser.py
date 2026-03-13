@@ -40,18 +40,18 @@ class GranularSynthesiser:
         self.currentGrainSize = self.grainSize + drift
 
         if (self.densityRandomness != 0):
-            drift = np.random.randint(-(self.densityRandomness // 2), self.densityRandomness // 2, dtype=int)
+            drift = np.random.uniform(-(self.densityRandomness / 2), self.densityRandomness / 2)
         else:
             drift = 0
 
         self.currentDensity = self.density + drift
 
         if (self.grainGainRandomness != 0):
-            drift = np.random.uniform(-(self.grainGainRandomness / 2), self.grainGainRandomness / 2)
+            drift = np.random.uniform(0.0, self.grainGainRandomness)
         else:
             drift = 0
 
-        self.currentGrainGain = self.grainGain + drift
+        self.currentGrainGain = self.grainGain - drift
 
 
     # ********************************** SERGIO **********************************
@@ -95,7 +95,7 @@ class GranularSynthesiser:
             output[startIdx : endIdx] += grain[0 : endIdx - startIdx]
 
             # Step sample index
-            sampleIdx += self.currentDensity
+            sampleIdx = int(sampleIdx + (self.sampleRate // self.currentDensity))
 
             if plot:
                 # Update plot

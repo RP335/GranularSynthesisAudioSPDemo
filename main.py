@@ -23,8 +23,6 @@ def main(operation, files, duration, grainSize, sizeRandomness, density, density
     duration_samples = int(sample_rate * duration)
     grainSize = int(grainSize * sample_rate)
     sizeRandomness = int(sizeRandomness * sample_rate)
-    densityRandomness = int(sample_rate // (density / densityRandomness))
-    density = int(sample_rate // density)
 
     #Setup the Synthesizer
     synth = GranularSynthesiser(sample_rate)
@@ -54,7 +52,7 @@ def main(operation, files, duration, grainSize, sizeRandomness, density, density
     print(f"Saving to {operation}ed_{files[0]}.wav")
     # Convert back to standard 16-bit audio format
     output_int = np.int16(output / np.max(np.abs(output)) * 32767)
-    wavfile.write(f"{operation}ed_{files[0]}.wav", sample_rate, output_int)
+    wavfile.write(f"{operation}ed_{files[0]}", sample_rate, output_int)
     
     print(f"Done {operation}ing and saving audio")
 

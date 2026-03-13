@@ -92,8 +92,9 @@ class Plotter:
         grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
 
         verticalShift = 0.0
-        totalShift = 10.0
+        totalShift = 2.0
         numPlots = 6
+        N_fft = 1024
         blendFactors = np.linspace(0.0, 1.0, numPlots)
         
         plt.figure(figsize=(10, 6))
@@ -101,12 +102,10 @@ class Plotter:
         # Plot blended noise
         for blendFactor in blendFactors:
             blendProfile = grainProfileA.blend(grainProfileB, blendFactor)
-            frequencies = np.linspace(0, synth.sampleRate/2, len(blendProfile.noiseSpectra))
-            plt.loglog(frequencies, blendProfile.noiseSpectra + verticalShift, label=f"Blend Factor = {blendFactor:.2f}")
+            freqs = np.fft.rfftfreq(N_fft, d=1/synth.sampleRate)
+            plt.plot(freqs, blendProfile.noiseSpectra + verticalShift, label=f"Blend Factor = {blendFactor:.2f}")
             verticalShift += totalShift / numPlots
 
-        plt.xlim([20.0, synth.sampleRate/2])
-        plt.ylim([0.1, 15.0])
         plt.grid(True, which="both", ls="-", alpha=0.2)
         plt.title("Blended Noise Magnitude Spectra (Vertically Shifted)")
         plt.xlabel('Frequency (Hz)')
@@ -124,7 +123,7 @@ class Plotter:
         grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
 
         verticalShift = 0.0
-        totalShift = 10.0
+        totalShift = 2.0
         numPlots = 6
         morphFactors = np.linspace(0.0, 1.0, numPlots)
 
@@ -134,11 +133,9 @@ class Plotter:
         for morphFactor in morphFactors:
             morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
             frequencies = np.linspace(0, synth.sampleRate/2, len(morphProfile.noiseSpectra))
-            plt.loglog(frequencies, morphProfile.noiseSpectra + verticalShift, label=f"Morph Factor = {morphFactor:.2f}")
+            plt.plot(frequencies, morphProfile.noiseSpectra + verticalShift, label=f"Morph Factor = {morphFactor:.2f}")
             verticalShift += totalShift / numPlots
 
-        plt.xlim([20.0, synth.sampleRate/2])
-        plt.ylim([0.1, 15.0])
         plt.grid(True, which="both", ls="-", alpha=0.2)
         plt.title("Morphed Noise Magnitude Spectra (Vertically Shifted)")
         plt.xlabel('Frequency (Hz)')
