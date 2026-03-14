@@ -116,8 +116,8 @@ class Plotter:
 
 
     def plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, synth):
-        #Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
-        #Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
+        Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
+        Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
 
         grainProfileA, denoisedSignalA, gA, startTimesA = synth.extractGrain(signalA, numGrainsA, debug=True)
         grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
