@@ -116,8 +116,8 @@ class Plotter:
 
 
     def plotMorph(signalA, signalB, durationSamples, numGrainsA, numGrainsB, synth):
-        Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
-        Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
+        #Plotter.plotExtraction(signalA, numGrainsA, durationSamples, synth, "Grain Profile Extraction (Signal A)")
+        #Plotter.plotExtraction(signalB, numGrainsB, durationSamples, synth, "Grain Profile Extraction (Signal B)")
 
         grainProfileA, denoisedSignalA, gA, startTimesA = synth.extractGrain(signalA, numGrainsA, debug=True)
         grainProfileB, denoisedSignalB, gB, startTimesB = synth.extractGrain(signalB, numGrainsB, debug=True)
@@ -126,12 +126,14 @@ class Plotter:
         totalShift = 2.0
         numPlots = 6
         morphFactors = np.linspace(0.0, 1.0, numPlots)
+        morphProfiles = []
 
         # Plot morphed noise
         plt.figure(figsize=(10, 6))
 
         for morphFactor in morphFactors:
             morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
+            morphProfiles.append(morphProfile)
             frequencies = np.linspace(0, synth.sampleRate/2, len(morphProfile.noiseSpectra))
             plt.plot(frequencies, morphProfile.noiseSpectra + verticalShift, label=f"Morph Factor = {morphFactor:.2f}")
             verticalShift += totalShift / numPlots
@@ -149,12 +151,26 @@ class Plotter:
         # Plot morphed grains
         plt.figure(figsize=(10, 6))
         plt.suptitle("Morphed Grains Magnitude Spectra (Vertically Shifted)")
-        morphProfile = grainProfileA.morph(grainProfileB, 0.5)
-        numGrains = len(morphProfile.grains)
+        numGrains = len(morphProfiles[0].grains)
+        totalShift = 20.0
         verticalShift = 0.0
 
+        # Normalization
+        for j in range(numGrains):
+            # find global peak for this grain index
+            peak = max(np.max(np.abs(morphProfiles[i].grains[j])) for i in range(numPlots))
+
+            if peak == 0:
+                continue
+
+            # normalize all grains at this position
+            for i in range(numPlots):
+                morphProfiles[i].grains[j] = morphProfiles[i].grains[j] / peak
+
+        profileIdx = 0
         for morphFactor in morphFactors:
-            morphProfile = grainProfileA.morph(grainProfileB, morphFactor)
+            morphProfile = morphProfiles[profileIdx]
+            profileIdx += 1
 
             for idx in range(numGrains):
                 plt.subplot(1, numGrains, idx + 1)
@@ -162,7 +178,7 @@ class Plotter:
                 plt.xlabel('Frequency (Hz)')
                 plt.ylabel('Magnitude')
                 plt.xlim([20.0, synth.sampleRate/2])
-                plt.ylim([0.1, 15.0])
+                #plt.ylim([0.1, 15.0])
 
                 # Frequency Spectrum
                 fft_result = np.fft.fft(morphProfile.grains[idx])
@@ -172,12 +188,12 @@ class Plotter:
                 
                 # Apply smoothing (choose one method)
                 # Method 2 (Savitzky-Golay) often works best for spectra
-                if len(magnitude) > 64:  # Ensure enough points for smoothing
-                    mag_smooth = signal.savgol_filter(magnitude, window_length=64, polyorder=3)
+                if len(magnitude) > 128:  # Ensure enough points for smoothing
+                    mag_smooth = signal.savgol_filter(magnitude, window_length=128, polyorder=3)
                 else:
                     mag_smooth = magnitude
                     
-                plt.plot(freq_plot, mag_smooth + verticalShift, label=f"Morph Factor = {morphFactor:.2f}") 
+                plt.plot(freq_plot, mag_smooth * 0.1 + verticalShift, label=f"Morph Factor = {morphFactor:.2f}") 
                 
             verticalShift += totalShift / numPlots
 
